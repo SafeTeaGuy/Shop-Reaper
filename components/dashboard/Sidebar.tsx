@@ -11,11 +11,12 @@ interface SidebarProps {
 }
 
 const NAV = [
-  { href: "/dashboard",           icon: "📡", label: "Overview"    },
-  { href: "/dashboard/alerts",    icon: "⚡", label: "Alerts"     },
-  { href: "/dashboard/products",  icon: "🔪", label: "SKU Autopsy" },
-  { href: "/dashboard/coach",     icon: "💬", label: "Reaper Coach"},
-  { href: "/dashboard/settings",  icon: "⚙️", label: "Settings"   },
+  { href: "/dashboard",           icon: "📡", label: "Overview"      },
+  { href: "/dashboard/alerts",    icon: "⚡", label: "Alerts"       },
+  { href: "/dashboard/products",  icon: "🔪", label: "SKU Autopsy"  },
+  { href: "/dashboard/gmv",       icon: "💀", label: "GMV Max"      },
+  { href: "/dashboard/coach",     icon: "💬", label: "Reaper Coach" },
+  { href: "/dashboard/settings",  icon: "⚙️", label: "Settings"    },
 ];
 
 export function Sidebar({ user, shops, activeShopId }: SidebarProps) {
