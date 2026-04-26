@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GMV Max Readiness — Shop Reaper</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#080808;--bg2:#0E0E0E;--bg3:#141414;
+    --border:#222;--border2:#2A2724;
+    --red:#D91A0F;--orange:#E07000;--green:#00B85A;--gold:#C9960A;
+    --text:#F0F0F0;--muted:#999;--dim:#555;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;padding:20px;min-height:100vh}
+  .page{max-width:900px;margin:0 auto}
+  /* typography */
+  .font-display{font-family:'Bebas Neue',sans-serif;letter-spacing:.05em}
+  .mono{font-family:'DM Mono',monospace}
+  /* demo banner */
+  .demo-banner{background:#001422;border:1px solid #38bdf8;border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:10px;margin-bottom:20px}
+  .badge-info{background:#001422;border:1px solid #38bdf8;color:#38bdf8;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;padding:2px 7px;border-radius:2px}
+  .demo-banner span{font-family:'DM Mono',monospace;font-size:11px;color:#38bdf8;letter-spacing:.5px}
+  /* header */
+  .page-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:4px}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:.1em;color:var(--text)}
+  .page-sub{color:var(--muted);font-size:13px;margin-top:4px;margin-bottom:24px}
+  /* cards */
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;position:relative;overflow:hidden}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+  .card-red::before{background:var(--red);box-shadow:0 0 12px rgba(217,26,15,.6)}
+  .card-green::before{background:var(--green);box-shadow:0 0 10px rgba(0,184,90,.5)}
+  .card-orange::before{background:var(--orange);box-shadow:0 0 12px rgba(224,112,0,.6)}
+  .card-none::before{display:none}
+  /* section label */
+  .section-label{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:3px;color:var(--red);text-transform:uppercase;margin-bottom:12px}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+  /* hero row */
+  .hero-row{display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:16px}
+  @media(max-width:640px){.hero-row{grid-template-columns:1fr}}
+  /* score card */
+  .score-card{padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}
+  .score-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--dim)}
+  .score-number{font-family:'Bebas Neue',sans-serif;font-size:80px;line-height:1;color:var(--orange)}
+  .score-denom{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--dim)}
+  /* badges */
+  .badge{display:inline-flex;align-items:center;border:1px solid;border-radius:2px;padding:2px 8px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase}
+  .badge-critical{background:#1C0000;border-color:var(--red);color:var(--red)}
+  .badge-warning{background:#1C0E00;border-color:var(--orange);color:var(--orange)}
+  .badge-safe{background:#001409;border-color:var(--green);color:var(--green)}
+  .badge-ghost{background:var(--bg3);border-color:var(--border);color:var(--muted)}
+  .pulse{animation:pulseRed 1.5s ease-in-out infinite}
+  @keyframes pulseRed{0%,100%{opacity:1}50%{opacity:.4}}
+  /* wasted spend box */
+  .waste-box{margin-top:4px;width:100%;border-radius:6px;border:1px solid var(--red);background:#0a0000;padding:10px 14px;text-align:center}
+  .waste-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:2px}
+  .waste-amount{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--red);line-height:1}
+  .waste-sub{font-family:'DM Mono',monospace;font-size:8px;color:var(--dim)}
+  /* blockers panel */
+  .blockers-panel{padding:20px}
+  .blocker{border-radius:6px;border:1px solid var(--red);background:#0a0000;padding:12px;margin-bottom:10px}
+  .blocker-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .blocker-metric{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+  .blocker-values{display:flex;align-items:center;gap:8px}
+  .blocker-current{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--red);line-height:1}
+  .blocker-target{font-family:'DM Mono',monospace;font-size:8px;color:var(--dim)}
+  .blocker-fix{font-size:11px;color:var(--dim);line-height:1.5}
+  .pass-check{border-radius:6px;border:1px solid var(--green);background:#001409;padding:10px 12px;display:flex;align-items:center;justify-content:space-between}
+  .pass-text{font-family:'DM Mono',monospace;font-size:9px;color:var(--green);letter-spacing:1.5px}
+  .pass-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green);line-height:1}
+  /* sku selector */
+  .sku-card{padding:20px;margin-bottom:16px}
+  .sku-desc{font-size:11px;color:var(--dim);margin-bottom:20px;line-height:1.5}
+  .sku-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:600px){.sku-cols{grid-template-columns:1fr}}
+  .sku-col-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .dot-green{background:var(--green)}
+  .dot-orange{background:var(--orange)}
+  .dot-red{background:var(--red)}
+  .col-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase}
+  .col-green{color:var(--green)}
+  .col-orange{color:var(--orange)}
+  .col-red{color:var(--red)}
+  .sku-row{display:flex;align-items:center;justify-content:space-between;border-radius:6px;border:1px solid;padding:8px 12px;margin-bottom:6px}
+  .sku-row-green{background:#001409;border-color:var(--green)}
+  .sku-row-orange{background:#0d0800;border-color:var(--orange)}
+  .sku-row-skip{background:var(--bg3);border-color:var(--border)}
+  .sku-name{font-size:11px;color:var(--text);flex:1;margin-right:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sku-cvr{display:flex;align-items:baseline;gap:4px;flex-shrink:0}
+  .sku-cvr-val{font-family:'Bebas Neue',sans-serif;font-size:20px;line-height:1}
+  .sku-cvr-label{font-family:'DM Mono',monospace;font-size:8px;color:var(--dim)}
+  /* bottom row */
+  .bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:600px){.bottom-row{grid-template-columns:1fr}}
+  /* budget signal */
+  .budget-card{padding:20px;border:1px solid var(--red);background:#0d0000;border-radius:10px;position:relative;overflow:hidden}
+  .budget-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--red);box-shadow:0 0 12px rgba(217,26,15,.6)}
+  .signal-row{display:flex;align-items:center;gap:12px;margin:12px 0 16px}
+  .signal-word{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:1;color:var(--red)}
+  .budget-reason{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+  .signal-rule{border-radius:6px;border:1px solid var(--border);padding:10px;margin-bottom:8px}
+  .signal-rule.active{background:var(--bg3)}
+  .signal-rule.inactive{opacity:.35}
+  .rule-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px}
+  .rule-desc{font-size:10px;color:var(--dim)}
+  /* creator scorer */
+  .creator-card{padding:20px}
+  .creator-desc{font-size:11px;color:var(--dim);line-height:1.5;margin-bottom:16px}
+  .creator-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+  .creator-row:last-child{border-bottom:none}
+  .creator-rank{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--dim);width:18px;text-align:right;flex-shrink:0}
+  .creator-info{flex:1;min-width:0}
+  .creator-handle{font-family:'DM Mono',monospace;font-size:10px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .creator-rev{font-family:'DM Mono',monospace;font-size:8px;color:var(--dim);margin-top:2px}
+  .creator-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .bar-track{width:60px;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:2px}
+  .bar-green{background:var(--green)}
+  .bar-orange{background:var(--orange)}
+  .bar-red{background:var(--red)}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Demo banner -->
+  <div class="demo-banner">
+    <span class="badge-info">DEMO</span>
+    <span>Mock data — NOT READY scenario · SPS 2.9 · OTD 78.4% · Refund 3.2%</span>
+  </div>
+
+  <!-- Header -->
+  <div class="page-label">Luxe Finds Co. · @luxefinds</div>
+  <div class="page-title font-display">GMV MAX READINESS</div>
+  <p class="page-sub">GMV Max is only as good as your shop health. Run it on a broken shop and you're just burning budget.</p>
+
+  <!-- Hero row -->
+  <div class="hero-row">
+
+    <!-- Score card -->
+    <div class="card card-orange">
+      <div class="score-card">
+        <div class="score-label mono">READINESS SCORE</div>
+        <div class="score-number">57</div>
+        <div class="score-denom mono">/ 100</div>
+        <span class="badge badge-critical pulse">✗ NOT READY</span>
+        <div class="waste-box">
+          <div class="waste-label mono">EST. WASTED SPEND</div>
+          <div class="waste-amount">$340</div>
+          <div class="waste-sub mono">per month at current health</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blockers panel -->
+    <div class="card card-red">
+      <div class="blockers-panel">
+        <div class="section-label">💀 Fix These Before Launching GMV Max</div>
+
+        <div class="blocker">
+          <div class="blocker-header">
+            <span class="blocker-metric">Seller Performance Score</span>
+            <div class="blocker-values">
+              <span class="blocker-current">2.9</span>
+              <span class="blocker-target mono">→ target ≥3.5</span>
+            </div>
+          </div>
+          <p class="blocker-fix">Improve on-time delivery and reduce cancellations to lift SPS.</p>
+        </div>
+
+        <div class="blocker">
+          <div class="blocker-header">
+            <span class="blocker-metric">On-Time Delivery Rate</span>
+            <div class="blocker-values">
+              <span class="blocker-current">78.4%</span>
+              <span class="blocker-target mono">→ target ≥85%</span>
+            </div>
+          </div>
+          <p class="blocker-fix">Audit your fulfillment SLA. Pause slow-shipping SKUs until OTD recovers.</p>
+        </div>
+
+        <div class="pass-check">
+          <span class="pass-text">✓ REFUND RATE CLEAR</span>
+          <span class="pass-val">3.2%</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SKU Selector -->
+  <div class="card card-none sku-card">
+    <div class="section-label">SKU Selector — Which Products to Run GMV Max On</div>
+    <p class="sku-desc">Running GMV Max on a 0.4% CVR SKU burns budget. Running it on a 4%+ CVR hero SKU is a multiplier.<br>CVR thresholds: Run ≥3.0% · Test 2.0–3.0% · Skip &lt;2.0%</p>
+
+    <div class="sku-cols">
+      <!-- Run -->
+      <div>
+        <div class="sku-col-header">
+          <div class="dot dot-green"></div>
+          <span class="col-label col-green">Run GMV Max · 2 SKUs</span>
+        </div>
+        <div class="sku-row sku-row-green">
+          <span class="sku-name">Glow Serum 30ml</span>
+          <div class="sku-cvr"><span class="sku-cvr-val col-green">4.1%</span><span class="sku-cvr-label mono">CVR</span></div>
+        </div>
+        <div class="sku-row sku-row-green">
+          <span class="sku-name">Vitamin C Drops</span>
+          <div class="sku-cvr"><span class="sku-cvr-val col-green">3.3%</span><span class="sku-cvr-label mono">CVR</span></div>
+        </div>
+      </div>
+
+      <!-- Test -->
+      <div>
+        <div class="sku-col-header">
+          <div class="dot dot-orange"></div>
+          <span class="col-label col-orange">Test Carefully · 2 SKUs</span>
+        </div>
+        <div class="sku-row sku-row-orange">
+          <span class="sku-name">Hydro Face Mist</span>
+          <div class="sku-cvr"><span class="sku-cvr-val col-orange">2.6%</span><span class="sku-cvr-label mono">CVR</span></div>
+        </div>
+        <div class="sku-row sku-row-orange">
+          <span class="sku-name">Retinol Night Cream</span>
+          <div class="sku-cvr"><span class="sku-cvr-val col-orange">2.1%</span><span class="sku-cvr-label mono">CVR</span></div>
+        </div>
+      </div>
+
+      <!-- Skip -->
+      <div>
+        <div class="sku-col-header">
+          <div class="dot dot-red"></div>
+          <span class="col-label col-red">Don't Run · 3 SKUs</span>
+        </div>
+        <div class="sku-row sku-row-skip">
+          <span class="sku-name">Eye Contour Gel</span>
+          <div class="sku-cvr"><span class="sku-cvr-val col-red">1.4%</span><span class="sku-cvr-label mono">CVR</span></div>
+        </div>
+        <div class="sku-row sku-row-skip">
+          <span class="sku-name">Toning Essence Travel</span>
+          <div class="sku-cvr"><span class="sku-cvr-val col-red">0.9%</span><span class="sku-cvr-label mono">CVR</span></div>
+        </div>
+        <div class="sku-row sku-row-skip">
+          <span class="sku-name">Lip Plump Gloss</span>
+          <div class="sku-cvr"><span class="sku-cvr-val col-red">0.4%</span><span class="sku-cvr-label mono">CVR</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget Signal + Creator Scorer -->
+  <div class="bottom-row" style="margin-top:16px">
+
+    <!-- Budget Signal -->
+    <div class="budget-card">
+      <div class="section-label" style="color:var(--red)">Budget Signal</div>
+      <div class="signal-row">
+        <div class="signal-word">PAUSE</div>
+        <span class="badge badge-critical">GMV MAX BUDGET</span>
+      </div>
+      <p class="budget-reason">2 health issues will drain your GMV Max budget with poor conversion. Fix blockers first.</p>
+
+      <div class="signal-rule active">
+        <div class="rule-label" style="color:var(--red)">▶ Pause budget when:</div>
+        <div class="rule-desc">Any blocker is failing. Every dollar spent is wasted conversion.</div>
+      </div>
+      <div class="signal-rule inactive">
+        <div class="rule-label mono" style="color:var(--dim)">Hold budget when:</div>
+        <div class="rule-desc">All checks pass but score 50–84. Run conservatively and watch.</div>
+      </div>
+      <div class="signal-rule inactive">
+        <div class="rule-label mono" style="color:var(--dim)">Scale budget when:</div>
+        <div class="rule-desc">SPS ≥3.5 + OTD ≥85% + Refund &lt;5% + score ≥85</div>
+      </div>
+    </div>
+
+    <!-- Creator Content Scorer -->
+    <div class="card card-none creator-card">
+      <div class="section-label">Creator Content Scorer</div>
+      <p class="creator-desc">GMV Max picks up shoppable affiliate videos. Authorize your highest-converting creators — their content gets amplified by the algorithm.</p>
+
+      <div class="creator-row">
+        <span class="creator-rank">1</span>
+        <div class="creator-info">
+          <div class="creator-handle">@glowwithsara</div>
+          <div class="creator-rev mono">$3,800 attributed</div>
+        </div>
+        <div class="creator-right">
+          <div class="bar-track"><div class="bar-fill bar-green" style="width:100%"></div></div>
+          <span class="badge badge-safe">AUTHORIZE</span>
+        </div>
+      </div>
+
+      <div class="creator-row">
+        <span class="creator-rank">2</span>
+        <div class="creator-info">
+          <div class="creator-handle">@skincarejunkie_</div>
+          <div class="creator-rev mono">$2,100 attributed</div>
+        </div>
+        <div class="creator-right">
+          <div class="bar-track"><div class="bar-fill bar-green" style="width:55%"></div></div>
+          <span class="badge badge-safe">AUTHORIZE</span>
+        </div>
+      </div>
+
+      <div class="creator-row">
+        <span class="creator-rank">3</span>
+        <div class="creator-info">
+          <div class="creator-handle">@beautybykim</div>
+          <div class="creator-rev mono">$1,240 attributed</div>
+        </div>
+        <div class="creator-right">
+          <div class="bar-track"><div class="bar-fill bar-green" style="width:33%"></div></div>
+          <span class="badge badge-safe">AUTHORIZE</span>
+        </div>
+      </div>
+
+      <div class="creator-row">
+        <span class="creator-rank">4</span>
+        <div class="creator-info">
+          <div class="creator-handle">@theskinglow</div>
+          <div class="creator-rev mono">$640 attributed</div>
+        </div>
+        <div class="creator-right">
+          <div class="bar-track"><div class="bar-fill bar-orange" style="width:17%"></div></div>
+          <span class="badge badge-warning">AT RISK</span>
+        </div>
+      </div>
+
+      <div class="creator-row">
+        <span class="creator-rank">5</span>
+        <div class="creator-info">
+          <div class="creator-handle">@dailydewlook</div>
+          <div class="creator-rev mono">$290 attributed</div>
+        </div>
+        <div class="creator-right">
+          <div class="bar-track"><div class="bar-fill bar-red" style="width:8%"></div></div>
+          <span class="badge badge-ghost">CHURNED</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
