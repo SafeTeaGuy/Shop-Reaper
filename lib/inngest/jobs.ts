@@ -212,6 +212,112 @@ export const syncShop = inngest.createFunction(
 );
 
 // ─────────────────────────────────────────────
+// JOB: Charge pool contributors on the 1st of each month
+// ─────────────────────────────────────────────
+import Stripe from "stripe";
+
+const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-03-31.basil" });
+
+export const chargePoolContributors = inngest.createFunction(
+  { id: "pool-charge-monthly", name: "Charge Pool Contributors Monthly" },
+  { cron: "0 9 1 * *" }, // 9am UTC on the 1st of every month
+  async ({ step }) => {
+    const supabase = await createAdminClient();
+
+    const { data: memberships } = await supabase
+      .from("pool_memberships")
+      .select("id, pool_deal_id, user_id, shop_id, contribution_pct, stripe_payment_method_id")
+      .eq("is_active", true);
+
+    if (!memberships?.length) return { charged: 0 };
+
+    const period = new Date();
+    period.setDate(1);
+    const periodStr = period.toISOString().split("T")[0];
+
+    let charged = 0;
+
+    await Promise.allSettled(
+      memberships.map((m) =>
+        step.run(`charge-${m.id}`, async () => {
+          const { data: metricsRow } = await supabase
+            .from("metrics")
+            .select("revenue_30d")
+            .eq("shop_id", m.shop_id)
+            .order("date", { ascending: false })
+            .limit(1)
+            .single();
+
+          // Also check manual_shop_health as fallback
+          let revenue = metricsRow?.revenue_30d ?? 0;
+          if (!revenue) {
+            const { data: manual } = await supabase
+              .from("manual_shop_health")
+              .select("revenue_30d")
+              .eq("shop_id", m.shop_id)
+              .single();
+            revenue = manual?.revenue_30d ?? 0;
+          }
+
+          if (!revenue || !m.stripe_payment_method_id) return;
+
+          const amount = Math.round(revenue * (m.contribution_pct / 100) * 100); // cents
+          if (amount < 50) return; // skip < $0.50
+
+          // Get Stripe customer from user record
+          const { data: userRow } = await supabase
+            .from("users")
+            .select("stripe_customer_id")
+            .eq("id", m.user_id)
+            .single();
+
+          if (!userRow?.stripe_customer_id) return;
+
+          const { data: existing } = await supabase
+            .from("pool_contributions")
+            .select("id")
+            .eq("membership_id", m.id)
+            .eq("period", periodStr)
+            .maybeSingle();
+
+          if (existing) return; // already billed this period
+
+          const intent = await stripeClient.paymentIntents.create({
+            amount,
+            currency: "usd",
+            customer: userRow.stripe_customer_id,
+            payment_method: m.stripe_payment_method_id,
+            off_session: true,
+            confirm: true,
+            metadata: {
+              pool_deal_id:  m.pool_deal_id,
+              membership_id: m.id,
+              user_id:       m.user_id,
+              period:        periodStr,
+            },
+          });
+
+          await supabase.from("pool_contributions").insert({
+            pool_deal_id:    m.pool_deal_id,
+            membership_id:   m.id,
+            user_id:         m.user_id,
+            amount:          amount / 100,
+            revenue_basis:   revenue,
+            period:          periodStr,
+            stripe_charge_id: intent.id,
+            status:          intent.status === "succeeded" ? "collected" : "pending",
+          });
+
+          if (intent.status === "succeeded") charged++;
+        })
+      )
+    );
+
+    return { charged };
+  }
+);
+
+// ─────────────────────────────────────────────
 // EVENT: Trigger manual sync
 // ─────────────────────────────────────────────
 export async function triggerShopSync(shopId: string) {
