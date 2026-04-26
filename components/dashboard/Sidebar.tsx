@@ -15,6 +15,7 @@ const NAV = [
   { href: "/dashboard/alerts",    icon: "⚡", label: "Alerts"       },
   { href: "/dashboard/products",  icon: "🔪", label: "SKU Autopsy"  },
   { href: "/dashboard/gmv",       icon: "💀", label: "GMV Max"      },
+  { href: "/dashboard/pool",      icon: "🏊", label: "Co-op Pool"   },
   { href: "/dashboard/coach",     icon: "💬", label: "Reaper Coach" },
   { href: "/dashboard/settings",  icon: "⚙️", label: "Settings"    },
 ];

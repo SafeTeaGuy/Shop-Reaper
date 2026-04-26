@@ -15,6 +15,9 @@ export type AlertType =
   | "policy_change";
 export type SkuStatus = "dying" | "warning" | "monitor" | "hero";
 export type ShopRisk = "safe" | "warning" | "critical" | "restricted";
+export type PoolDealStatus = "draft" | "open" | "funded" | "ordered" | "delivered" | "cancelled";
+export type PoolContributionStatus = "pending" | "collected" | "failed" | "refunded";
+export type PoolOrderStatus = "pending" | "placed" | "shipped" | "delivered";
 
 // ── USER ──────────────────────────────────────
 export interface User {
@@ -77,11 +80,13 @@ export interface ShopMetrics {
   created_at: string;
 }
 
+export type ProductSource = "tiktok" | "manual" | "aliexpress";
+
 // ── PRODUCTS / SKUS ───────────────────────────
 export interface Product {
   id: string;
   shop_id: string;
-  tiktok_sku_id: string;
+  tiktok_sku_id: string | null;
   name: string;
   image_url: string | null;
   price: number;
@@ -93,7 +98,20 @@ export interface Product {
   refund_count_30d: number;
   impressions_30d: number;
   affiliate_traffic_share: number;    // % of total affiliate traffic
+  source: ProductSource;
+  source_url: string | null;
   last_updated: string;
+}
+
+// ── MANUAL SHOP HEALTH ────────────────────────
+export interface ManualShopHealth {
+  id: string;
+  shop_id: string;
+  sps_computed: number;
+  on_time_delivery_rate: number;
+  refund_rate: number;
+  revenue_30d: number;
+  updated_at: string;
 }
 
 // ── ALERTS ────────────────────────────────────
@@ -193,6 +211,62 @@ export interface DashboardData {
   alerts: Alert[];
   products: Product[];
   affiliates: Affiliate[];
+}
+
+// ── CO-OP POOL ────────────────────────────────
+export interface PoolDeal {
+  id: string;
+  title: string;
+  description: string | null;
+  aliexpress_url: string;
+  image_url: string | null;
+  unit_price: number;
+  min_units: number;
+  target_amount: number;
+  category: string | null;
+  proposed_by: string | null;
+  status: PoolDealStatus;
+  ai_match_tags: string[];
+  funded_at: string | null;
+  ordered_at: string | null;
+  created_at: string;
+}
+
+export interface PoolMembership {
+  id: string;
+  pool_deal_id: string;
+  user_id: string;
+  shop_id: string;
+  contribution_pct: number;
+  stripe_payment_method_id: string | null;
+  is_active: boolean;
+  joined_at: string;
+  left_at: string | null;
+}
+
+export interface PoolContribution {
+  id: string;
+  pool_deal_id: string;
+  membership_id: string;
+  user_id: string;
+  amount: number;
+  revenue_basis: number;
+  period: string;
+  stripe_charge_id: string | null;
+  status: PoolContributionStatus;
+  created_at: string;
+}
+
+export interface PoolOrder {
+  id: string;
+  pool_deal_id: string;
+  total_collected: number;
+  unit_count: number;
+  aliexpress_order_ref: string | null;
+  status: PoolOrderStatus;
+  placed_at: string | null;
+  notes: string | null;
+  created_at: string;
 }
 
 // ── STRIPE ───────────────────────────────────

@@ -90,6 +90,53 @@ export async function POST(request: NextRequest) {
       }
       break;
     }
+
+    case "payment_intent.succeeded": {
+      const intent = event.data.object as Stripe.PaymentIntent;
+      const { pool_deal_id, membership_id } = intent.metadata ?? {};
+      if (!pool_deal_id || !membership_id) break;
+
+      // Mark contribution as collected
+      await supabase.from("pool_contributions")
+        .update({ status: "collected" })
+        .eq("stripe_charge_id", intent.id);
+
+      // Check if pool has reached its target
+      const { data: dealRow } = await supabase
+        .from("pool_deals")
+        .select("target_amount, status")
+        .eq("id", pool_deal_id)
+        .single();
+
+      if (!dealRow || dealRow.status !== "open") break;
+
+      const { data: collected } = await supabase
+        .from("pool_contributions")
+        .select("amount")
+        .eq("pool_deal_id", pool_deal_id)
+        .eq("status", "collected");
+
+      const total = (collected ?? []).reduce((s, r) => s + Number(r.amount), 0);
+
+      if (total >= Number(dealRow.target_amount)) {
+        await supabase.from("pool_deals").update({
+          status:    "funded",
+          funded_at: new Date().toISOString(),
+        }).eq("id", pool_deal_id);
+      }
+      break;
+    }
+
+    case "payment_intent.payment_failed": {
+      const intent = event.data.object as Stripe.PaymentIntent;
+      const { pool_deal_id, membership_id } = intent.metadata ?? {};
+      if (!pool_deal_id || !membership_id) break;
+
+      await supabase.from("pool_contributions")
+        .update({ status: "failed" })
+        .eq("stripe_charge_id", intent.id);
+      break;
+    }
   }
 
   return NextResponse.json({ received: true });
