@@ -77,11 +77,13 @@ export interface ShopMetrics {
   created_at: string;
 }
 
+export type ProductSource = "tiktok" | "manual" | "aliexpress";
+
 // ── PRODUCTS / SKUS ───────────────────────────
 export interface Product {
   id: string;
   shop_id: string;
-  tiktok_sku_id: string;
+  tiktok_sku_id: string | null;
   name: string;
   image_url: string | null;
   price: number;
@@ -93,7 +95,20 @@ export interface Product {
   refund_count_30d: number;
   impressions_30d: number;
   affiliate_traffic_share: number;    // % of total affiliate traffic
+  source: ProductSource;
+  source_url: string | null;
   last_updated: string;
+}
+
+// ── MANUAL SHOP HEALTH ────────────────────────
+export interface ManualShopHealth {
+  id: string;
+  shop_id: string;
+  sps_computed: number;
+  on_time_delivery_rate: number;
+  refund_rate: number;
+  revenue_30d: number;
+  updated_at: string;
 }
 
 // ── ALERTS ────────────────────────────────────
