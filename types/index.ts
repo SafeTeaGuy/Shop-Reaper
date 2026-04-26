@@ -172,6 +172,28 @@ export interface Referral {
   created_at: string;
 }
 
+// ── CHAT ──────────────────────────────────────
+export interface ChatGroup {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  icon: string;
+  is_public: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  group_id: string;
+  user_id: string;
+  display_name: string;
+  avatar_seed: string | null;
+  body: string;
+  created_at: string;
+}
+
 // ── API RESPONSES ─────────────────────────────
 export interface ApiResponse<T> {
   data: T | null;
